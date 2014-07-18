@@ -1,0 +1,33 @@
+* rtnav.el - A todo list generator and quick source tree navigator
+** Description
+*** Basic requirements and functions [28%]
+    - [ ] Parse a directory tree recursively searching for annotations
+      (like TODO, NOTE, XXXX, and FIXME in comments) in each source code file
+      in the working tree.
+    - [ ] Compile the annotations, line numbers, and associated file names
+      in a buffer that gets displayed to the user.
+    - [ ] The items extracted from the task list item should include a file
+      name and a line number (integer) along with the annotation itself.
+    - [ ] The list entry are used to open the associated file in its own window
+      with the point at the line number indicated.
+    - [ ] Process is repeated as long as the buffer is live
+    - [X] Enable the user to parse a task list item with a command and key
+      binding.
+    - [X] Display the generated task list file in a new window.
+** Usage
+
+   < Usage to be determined >
+
+** Tasks
+*** To do list [50%]
+    - [ ] Finish coding the library.
+    - [ ] Rename the library file and/or consolidate it with the mode source
+      file.
+    - [ ] Finish the test cases necessary to have basic functionality.
+    - [ ] Add the completed functions to the minor mode
+    - [X] Consider organic list generation with lisp -- we are doing this shit!
+    - [X] Factor out some test scaffolding in the form of test fixtures.
+    - [X] Figure out how to use a temp buffer for testing.
+    - [X] Create a library file to stage functions (right now they are in the
+      rtlib.el file)
+*** Milestones
