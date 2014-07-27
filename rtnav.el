@@ -44,7 +44,8 @@
 (defvar eltodo-mode-map (make-sparse-keymap)
 "Keymap for eltodo-mode.")
 
-;; Every time that we start up the rtnav minor mode, a few things will happen:
+;; Every time that we start up the rtnav minor mode, these are the things that
+;; should happen:
 ;;
 ;; 1. The mode will prompt the user for a project root path (the defalut will be
 ;;    the default path of the current buffer)
@@ -74,7 +75,8 @@
   :global
   :keymap (let ((map (make-sparse-keymap)))
 	    (define-key map (kbd "C-c ")))
-  ;; XXXX: don't forget to prompt the user for a source directory!
+  ;; XXXX: don't forget to prompt the user for a source directory
+  ;; (and provide a default)!
 
   )
 
@@ -171,6 +173,7 @@ the function switches to that buffer."
                  (set-buffer targetFile)))
       (message "Error: file not found!"))))
 
+
 (defun rtnav-move-mark-to-loc (targetBuffer markLOC)
   "Move the mark in the specified buffer to the desired location.
 
@@ -228,11 +231,13 @@ and returns them in a list to the caller.  TODO: add the exclude functionality."
   (eltodo-mode +1)
   )
 
+
 (defun disable-eltodo-mode ()
   "Disable alternate souce tree navigation and task organization."
   (interactive)
   (eltodo-mode -1)
   )
+
 
 (provide 'eltodo-mode)
 
