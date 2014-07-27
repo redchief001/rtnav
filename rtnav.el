@@ -43,7 +43,8 @@
 
 
 
-;; Every time that we start up the rtnav minor mode, a few things will happen:
+;; Every time that we start up the rtnav minor mode, these are the things that
+;; should happen:
 ;;
 ;; 1. The mode will prompt the user for a project root path (the defalut will be
 ;;    the default path of the current buffer)
@@ -95,6 +96,7 @@
 	   (error "Invalid directory entered!")
 	   (disable-rtnav-mode)))
        ))))
+
 
 (defun rtnav-goto-list-item ()
   "Go to the list item under point"
@@ -198,6 +200,7 @@ the function switches to that buffer."
                  (set-buffer targetFile)))
       (message "Error: file not found!"))))
 
+
 (defun rtnav-move-mark-to-loc (targetBuffer markLOC)
   "Move the mark in the specified buffer to the desired location.
 
@@ -255,11 +258,13 @@ and returns them in a list to the caller.  TODO: add the exclude functionality."
   (rtnav-mode +1)
   )
 
+
 (defun disable-rtnav-mode ()
   "Disable alternate souce tree navigation and task organization."
   (interactive)
   (rtnav-mode -1)
   )
+
 
 (provide 'eltodo-mode)
 
