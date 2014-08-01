@@ -41,8 +41,7 @@
 ;;;
 ;;; Code:
 
-(defvar eltodo-mode-map (make-sparse-keymap)
-"Keymap for eltodo-mode.")
+
 
 ;; Every time that we start up the rtnav minor mode, these are the things that
 ;; should happen:
@@ -63,22 +62,53 @@
 ;;    point at the location of the annotation.
 ;; 8. Once the user has completed the task that was annotated, they will then
 ;;    erase
-;;    the anotation text and save the buffer.
+;;    the annotation text and save the buffer.
 ;; 9. When the buffer containing the annotation is saved, the list is re-compiled
 ;;    and should display the updated tasks/annotations.
 
+;; Extend rtnav with other types of annotations by adding to this list.
+(defvar rtnav-valid-annotations (list "TODO" "FIXME" "XXXX" "NOTE")
+  "The valid annotations that are parsed by rtnav."
+  )
+
 
 ;;;###autoload
-(define-minor-mode eltodo-mode
+(define-minor-mode rtnav
   "Minor mode for alternate source tree navigation and task list generation"
+
   :lighter " RTNAV"
   :global
-  :keymap (let ((map (make-sparse-keymap)))
-	    (define-key map (kbd "C-c ")))
-  ;; XXXX: don't forget to prompt the user for a source directory
-  ;; (and provide a default)!
+  :keymap (let ((rtnav-map (make-sparse-keymap)))
+	    (define-key rtnav-map (kbd "C-c C-l n") 'rtnav-goto-list-item)
+	    (define-key rtnav-map (kbd "C-c C-l s") 'rtnav-save-task-list)
+	    rtnav-map)
+  ;; Prompt the user for a directory to parse (default should be the current
+  ;; buffer's default-directory). TODO: figure out how to display the default
+  ;; dynamically. TODO: conditionally handle enabling of the mode...
+  (let ((userInputDirectory (read-file-name "Directory to parse (default %s ) : " (pwd)))
+	(treeRoot))
+    ;; If the input is nil...
+    (if (not treeRoot)
+      ;; Make the default directory treeRoot.
+      (setq treeRoot default-directory)
+      ;; Make userInputDirectory treeRoot if it is a directory.
+      (if (file-directory-p userInputDirectory)
+	  (setq treeRoot userInputDirectory)
+	(error "Invalid directory entered!")
+	(disable-rtnav))
+      )))
 
-  )
+
+(defun rtnav-goto-list-item ()
+  "Go to the list item under point."
+(interactive)
+)
+
+
+(defun rtnav-save-task-list ()
+  "Save the current task list to a file."
+(interactive)
+)
 
 
 (defun rtnav-gen-list-buffer ()
@@ -134,7 +164,9 @@ if these are found in the line under point."
   (interactive)
   (save-excursion
     (save-restriction
-      (let (fileName lineNo)
+      (let (fileName
+	    lineNo
+	    fileAndLine)
         ;; Narrow the region to the current line.
         (narrow-to-region (line-beginning-position)
                           (line-end-position))
@@ -224,22 +256,21 @@ and returns them in a list to the caller.  TODO: add the exclude functionality."
     myAllFiles))
 
 
-;; These are the commands to toggle the minor mode.
-(defun enable-eltodo-mode ()
+;; These are the commands to toggle the rtnav minor mode.
+(defun enable-rtnav ()
   "Enable alternate source tree navigation and task organization."
   (interactive)
-  (eltodo-mode +1)
+  (rtnav +1)
   )
 
 
-(defun disable-eltodo-mode ()
+(defun disable-rtnav ()
   "Disable alternate souce tree navigation and task organization."
   (interactive)
-  (eltodo-mode -1)
+  (rtnav -1)
   )
 
 
-(provide 'eltodo-mode)
+(provide 'rtnav)
 
-
-;;; eltodo.el ends here
+;;; rtnav.el ends here
