@@ -146,21 +146,26 @@ its full text."
 	(listEntry))
     ;; Open the file passed in with a temp buffer.
     (with-temp-buffer
-      (find-file-noselect fileName)
-      ;; Find each occurrence of the annotations in list of valid annotations.
-      (dolist (annot rtnav-valid-annotations)
-	;; For each of the annotations, search for, and collect each note, along
-	;; with it's line number.
-	(while (re-search-forward annot nil t)
-	  (goto-char (match-beginning 0))
-	  ;; Grab the line number and the text from the line.
-	  (setq lineNo (what-line))
-	  (setq annotText (thing-at-point 'line))
-	  ;; Push the line number and text onto the list.
-	  (setq listEntry (list lineNo annotText))
-	  (add-to-list masterAnnotList listEntry))
-	))
-    ;; Return the list of annotations for the passed file.
+      (if (file-regular-p fileName)
+	  (progn (find-file-noselect fileName)
+		 ;; Find each occurrence of the annotations in list of valid
+		 ;; annotations.
+		 (dolist (annot rtnav-valid-annotations)
+		   ;; For each of the annotations, search for, and collect each
+		   ;; note, along
+		   ;; with it's line number.
+		   (while (re-search-forward annot (point-max) nil 1)
+		     (goto-char (match-beginning 0))
+		     ;; Grab the line number and the text from the line.
+		     (setq lineNo (cons (what-line) lineNo))
+		     (setq annotText (cons (thing-at-point 'line) annotText))
+		     ;; Push the line number and text onto the list.
+		     (setq listEntry (cons (list lineNo annotText) listEntry))
+		     (setq masterAnnotList (cons listEntry masterAnnotList)))
+		   ))
+	(error "Invalid file name given!")))
+    ;; Return the list of annotations for the passed file.  FIXME: this shit is
+    ;; returning nil for some reason...
     masterAnnotList))
 
 

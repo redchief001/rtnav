@@ -142,11 +142,18 @@ mark in that specific buffer to ensure it is at the pre-specified location."
 The annotation parsing command should return a list containing each of the valid
 annotations in the dummy file along with the line number and file name of each."
   (interactive)
-  (let ((targetfile "dummyfile.java")
+  (let ((targetFile "~/dummyfile.java")
 	(packedResults))
     ;; Call the rtnav-search-file-for-annot function with the dummy file as an
     ;; argument and save the result in PACKEDRESULTS for unpacking.
-    ))
+    (setq packedResults (rtnav-search-file-for-annot (targetFile)))
+    ;; Unpack the results and check them against the actual file contents.
+    (dolist (entry packedResults)
+      ;; Check the contents of the list against the actual file content.
+      ;; TODO: figure out how the contents of the file are returned by the
+      ;; function.
+
+      )))
 
 ;; -------------- Test fixtures --------------- ;;
 
