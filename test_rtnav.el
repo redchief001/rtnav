@@ -1,9 +1,8 @@
-;;; test_rtnav.el --- The rtnav-mode test suite
+;;; test_rtnav.el --- The rtnav test suite
 ;;;
 ;;; Commentary:
 ;;;
-;;;
-;;; This is the test suite for the eltodo tool and associated functions.  The
+;;; This is the test suite for rtnav and associated functions.  The
 ;;; test fixtures for the more complex tests are at the bottom in a labeled
 ;;; section.
 ;;;

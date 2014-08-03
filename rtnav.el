@@ -1,8 +1,8 @@
-;;; rtnav.el -- an annotation list compiler and source tree navigator
+;;; rtnav.el -- an annotation task list compiler and source tree navigator
 ;;;
 ;;; Commentary:
 ;;;
-;;; This tool is an Emacs extension that allows source tree navigation based on
+;;; This tool is an Emacs minor-mode that allows source tree navigation based on
 ;;; annotations left in comments by the developer.  The tool parses an entire
 ;;; working tree of source code and extracts comments delimited by annotations
 ;;; ("TODO", "FIXME", "XXXX", and "NOTE") left as reminders, tasks, and
@@ -43,8 +43,8 @@
 
 
 
-;; Every time that we start up the rtnav minor mode, these are the things that
-;; should happen:
+;; For right now, every time that we start up the rtnav minor mode, these are the
+;; things that should happen:
 ;;
 ;; 1. The mode will prompt the user for a project root path (the defalut will be
 ;;    the default path of the current buffer)
