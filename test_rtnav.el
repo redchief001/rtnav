@@ -136,6 +136,18 @@ mark in that specific buffer to ensure it is at the pre-specified location."
     ;; Kill the target buffer when finished.
     (kill-buffer targetBuffer)))
 
+(ert-deftest rtnav-test-search-file-for-annot ()
+  "Tests the annotation parsing function.
+
+The annotation parsing command should return a list containing each of the valid
+annotations in the dummy file along with the line number and file name of each."
+  (interactive)
+  (let ((targetfile "dummyfile.java")
+	(packedResults))
+    ;; Call the rtnav-search-file-for-annot function with the dummy file as an
+    ;; argument and save the result in PACKEDRESULTS for unpacking.
+    ))
+
 ;; -------------- Test fixtures --------------- ;;
 
 ;; This is a collection of functions that create a working tree with dummy files
@@ -143,7 +155,7 @@ mark in that specific buffer to ensure it is at the pre-specified location."
 ;; the clutter in the test cases themselves.
 
 (defun rtnav-dummy-tree-setup ()
-  "This is a test fixture that creates a dummy working tree with source files."
+  "Create a dummy working tree with source files."
   (interactive)
   (let (origin targetDir targetSubdir)
     (setq origin default-directory)
@@ -167,8 +179,41 @@ mark in that specific buffer to ensure it is at the pre-specified location."
       (message "There was a problem generating the test tree!"))
     (cd origin)))
 
+
+(defun rtnav-dummy-file-setup ()
+  "Create a dummy file with annotations."
+  (interactive)
+  (let ((dummyHeader)
+	(dummyFunction1)
+	(dummyComment1)
+	(dummyFunction2)
+	(dummyComment2))
+    ;; Use the shell to create a dummy file in the working directory.
+    (shell-command "touch dummyfile.java")
+    (with-temp-buffer
+      (find-file-noselect "dummyfile.java")
+      ;; Set up the strings for insertion into the file.
+      (setq dummyHeader
+	    "/** dummyfile.java\n  * NOTE: this is a test java file\n  *\n")
+      (setq dummyFunction1
+	    "public static void main(String [] args){\nsystem.out.println(\"hello\")\n}\n")
+      (setq dummyComment1
+	    "  // TODO: clean up this code!\n")
+      (setq dummyFunction2
+	    "  bool hasCleanUnderwear(somePerson){\n\n}\n")
+      (setq dummyComment2
+	    "  /* FIXME: this entire file is garbage\n    And really needs work!\n")
+      ;; Insert the strings into the file.
+      (insert dummyHeader)
+      (insert dummyFunction1)
+      (insert dummyComment1)
+      (insert dummyFunction2)
+      (insert dummyComment2)
+      (write-file "dummyfile.java"))))
+
+
 (defun rtnav-place-files-in-tree (dir1 dir2)
-  "This test fixture places test files with test data in the passed in directories.
+  "Place test files with test data in DIR1 and DIR2.
 
 This function takes a directory as a paramater and places files of various types
 at all of the levels of the tree to simulate a project source tree."
@@ -181,7 +226,7 @@ at all of the levels of the tree to simulate a project source tree."
   (cd ".."))
 
 (defun rtnav-populate-files-with-dummy-data (dir1 dir2)
-  "This test fixture places annotations and other text in files in treeRoot.
+  "Place annotations and other text in files in DIR1 and DIR2.
 
 This function can be called from any other fixture and adds annotations and
 other text content to files in the given directories.  The fixture uses a temp

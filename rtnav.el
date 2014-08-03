@@ -71,6 +71,11 @@
   "The valid annotations that are parsed by rtnav."
   )
 
+(defvar rtnav-valid-comment-begin-delims (list "//" "/*" "#" ";" "<!--" "'''" "\"\"\"")
+  "The supported comment start deliminators.")
+
+(defvar rtnav-valid-comment-end-delims (list "*/" "'''" "\"\"\"" "-->")
+  "The supported comment end deliminators.")
 
 ;;;###autoload
 (define-minor-mode rtnav
@@ -86,28 +91,35 @@
   ;; buffer's default-directory). TODO: figure out how to display the default
   ;; dynamically. TODO: conditionally handle enabling of the mode...
   (let ((userInputDirectory (read-file-name "Directory to parse (default %s ) : " (pwd)))
-	(treeRoot))
+	(treeRoot)
+	(filesList)
+	(parsedOutput))
     ;; If the input is nil...
-    (if (not treeRoot)
-      ;; Make the default directory treeRoot.
-      (setq treeRoot default-directory)
+    (if (not userInputDirectory)
+	;; Make the default directory treeRoot.
+	(setq treeRoot default-directory)
       ;; Make userInputDirectory treeRoot if it is a directory.
       (if (file-directory-p userInputDirectory)
 	  (setq treeRoot userInputDirectory)
 	(error "Invalid directory entered!")
 	(disable-rtnav))
-      )))
+      )
+    ;; Call the function that parses the directory tree.
+    (setq filesList (rtnav-parse-tree treeRoot))
+    ;; For each file returned, call the file parsing function.
+    ;; TODO: define the function that will parse the contents of the files.
+    ))
 
 
 (defun rtnav-goto-list-item ()
   "Go to the list item under point."
-(interactive)
+  (interactive)
 )
 
 
 (defun rtnav-save-task-list ()
   "Save the current task list to a file."
-(interactive)
+  (interactive)
 )
 
 
@@ -120,14 +132,36 @@
     (set-buffer targetBuffer)))
 
 
-(defun rtnav-search-file-for-annot ()
-  "Search the passed file for annotations returning a two item results list.
+(defun rtnav-search-file-for-annot (fileName)
+  "Search the passed file for annotations returning results list.
 
-Takes a file name as an argument and searches that file for annotations within
+Takes FILENAME as an argument and searches that file for annotations within
 comments.  The comment deliminators are determined based on file extension.
 Returns a list that contains sub-lists that have an annotations start line and
 its full text."
-  )
+  (interactive)
+  (let ((masterAnnotList)
+	(lineNo)
+	(annotText)
+	(listEntry))
+    ;; Open the file passed in with a temp buffer.
+    (with-temp-buffer
+      (find-file-noselect fileName)
+      ;; Find each occurrence of the annotations in list of valid annotations.
+      (dolist (annot rtnav-valid-annotations)
+	;; For each of the annotations, search for, and collect each note, along
+	;; with it's line number.
+	(while (re-search-forward annot nil t)
+	  (goto-char (match-beginning 0))
+	  ;; Grab the line number and the text from the line.
+	  (setq lineNo (what-line))
+	  (setq annotText (thing-at-point 'line))
+	  ;; Push the line number and text onto the list.
+	  (setq listEntry (list lineNo annotText))
+	  (add-to-list masterAnnotList listEntry))
+	))
+    ;; Return the list of annotations for the passed file.
+    masterAnnotList))
 
 
 (defun rtnav-parse-tree (&optional sourceTreeRoot)
