@@ -48,23 +48,24 @@
 ;;
 ;; 1. The mode will prompt the user for a project root path (the defalut will be
 ;;    the default path of the current buffer)
-;; 2. The path that is input (or the dafault) will be stored as a global variable.
-;; 3. A function will use that global variable as the argument for the
+;; 2. The mode will use the user input as the argument for the
 ;;    directory-files-recursive function.
-;; 4. The returned list will be stored as a buffer local variable after any
-;;    non-supported files (or dirs) are removed .
-;; 5. Each file in the list will be searched and the annotations and associated
+;; 3. Each file in the list will be searched and the annotations and associated
 ;;    text and meta-data will be extracted.
-;; 6. The extracted information will be written to  a buffer and displayed to the
+;; 4. The extracted information will be written to  a buffer and displayed to the
 ;;    user.
-;; 7. When the user invokes the proper key command while point is on a list item,
+;; 5. When the user invokes the proper key command while point is on a list item,
 ;;    the associated source file will be displayed in the other window with the
 ;;    point at the location of the annotation.
-;; 8. Once the user has completed the task that was annotated, they will then
-;;    erase
-;;    the annotation text and save the buffer.
-;; 9. When the buffer containing the annotation is saved, the list is re-compiled
+;; 6. Once the user has completed the task that was annotated, they will then
+;;    erase the annotation text from the source file and save the buffer.
+;; 7. When the buffer containing the annotation is saved, the list is re-compiled
 ;;    and should display the updated tasks/annotations.
+;; 8. When the user invokes the 'save task list to file' command, the contents
+;;    of the task list buffer are written to an output file at the project
+;;    directory root.
+;; 9. When the task list buffer is killed by the user, the mode is automatically
+;;    disabled.
 
 ;; Extend rtnav with other types of annotations by adding to this list.
 (defvar rtnav-valid-annotations (list "TODO" "FIXME" "XXXX" "NOTE")
