@@ -94,6 +94,7 @@
   (let ((userInputDirectory (read-file-name "Directory to parse (default %s ) : " (pwd)))
 	(treeRoot)
 	(filesList)
+	(taskListBuffer)
 	(parsedOutput))
     ;; If the input is nil...
     (if (not userInputDirectory)
@@ -105,16 +106,18 @@
 	(error "Invalid directory entered!")
 	(disable-rtnav))
       )
-    ;; TODO: set up and open the task list buffer in a new window.
-
+    ;; Set up and open the task list buffer in a new window.
+    (setq  taskListBuffer (rtnav-gen-list-buffer))
+    (switch-to-buffer-other-window taskListBuffer)
     ;; Call the function that parses the directory tree.
     (setq filesList (rtnav-parse-tree treeRoot))
     ;; For each file returned, call the file parsing function.
     (dolist (fileName filesList)
       ;; Store the results in the PARSEOUTPUT variable and write that to the
-      ;; task list buffer for display to the user. TODO: implement this...
-
-      )))
+      ;; task list buffer for display to the user.
+      (with-current-buffer taskListBuffer
+	  ;; TODO: write list entries to buffer here...
+	  ))))
 
 
 (defun rtnav-goto-list-item ()
