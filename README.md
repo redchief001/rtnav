@@ -1,6 +1,7 @@
 # rtnav.el
 
-An Emacs extension providing alternate source tree navigation and task list generation.
+An Emacs extension providing alternate source tree navigation and task list generation
+based on commonly used annotations.
 
 ## Description:
 
@@ -31,7 +32,8 @@ in turn updates the list contents in the task list file.
 
 ## Minor mode keybindings:
 
-All keybindings for rtnav-mode start with C-c C-l then the additional keystroke
+All keybindings for rtnav-mode start with `C-c C-l` then the additional keystroke
 or combination that follows.
 
-* `-`: go to the source location of the list item that the point is currently in.
+- Navigate to the list item under point -> `C-c C-l n`
+- Save task list to file                -> `C-c C-l s`

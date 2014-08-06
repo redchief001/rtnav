@@ -46,25 +46,26 @@
 ;; For right now, every time that we start up the rtnav minor mode, these are the
 ;; things that should happen:
 ;;
-;; 1. The mode will prompt the user for a project root path (the defalut will be
+;; 1. The mode will prompt the user for a project root path (the default will be
 ;;    the default path of the current buffer)
-;; 2. The path that is input (or the dafault) will be stored as a global variable.
-;; 3. A function will use that global variable as the argument for the
+;; 2. The mode will use the user input as the argument for the
 ;;    directory-files-recursive function.
-;; 4. The returned list will be stored as a buffer local variable after any
-;;    non-supported files (or dirs) are removed .
-;; 5. Each file in the list will be searched and the annotations and associated
+;; 3. Each file in the list will be searched and the annotations and associated
 ;;    text and meta-data will be extracted.
-;; 6. The extracted information will be written to  a buffer and displayed to the
+;; 4. The extracted information will be written to  a buffer and displayed to the
 ;;    user.
-;; 7. When the user invokes the proper key command while point is on a list item,
+;; 5. When the user invokes the proper key command while point is on a list item,
 ;;    the associated source file will be displayed in the other window with the
 ;;    point at the location of the annotation.
-;; 8. Once the user has completed the task that was annotated, they will then
-;;    erase
-;;    the annotation text and save the buffer.
-;; 9. When the buffer containing the annotation is saved, the list is re-compiled
+;; 6. Once the user has completed the task that was annotated, they will then
+;;    erase the annotation text from the source file and save the buffer.
+;; 7. When the buffer containing the annotation is saved, the list is re-compiled
 ;;    and should display the updated tasks/annotations.
+;; 8. When the user invokes the 'save task list to file' command, the contents
+;;    of the task list buffer are written to an output file at the project
+;;    directory root.
+;; 9. When the task list buffer is killed by the user, the mode is automatically
+;;    disabled.
 
 ;; Extend rtnav with other types of annotations by adding to this list.
 (defvar rtnav-valid-annotations (list "TODO" "FIXME" "XXXX" "NOTE")
@@ -93,6 +94,7 @@
   (let ((userInputDirectory (read-file-name "Directory to parse (default %s ) : " (pwd)))
 	(treeRoot)
 	(filesList)
+	(taskListBuffer)
 	(parsedOutput))
     ;; If the input is nil...
     (if (not userInputDirectory)
@@ -104,11 +106,18 @@
 	(error "Invalid directory entered!")
 	(disable-rtnav))
       )
+    ;; Set up and open the task list buffer in a new window.
+    (setq  taskListBuffer (rtnav-gen-list-buffer))
+    (switch-to-buffer-other-window taskListBuffer)
     ;; Call the function that parses the directory tree.
     (setq filesList (rtnav-parse-tree treeRoot))
     ;; For each file returned, call the file parsing function.
-    ;; TODO: define the function that will parse the contents of the files.
-    ))
+    (dolist (fileName filesList)
+      ;; Store the results in the PARSEOUTPUT variable and write that to the
+      ;; task list buffer for display to the user.
+      (with-current-buffer taskListBuffer
+	  ;; TODO: write list entries to buffer here...
+	  ))))
 
 
 (defun rtnav-goto-list-item ()
@@ -147,25 +156,30 @@ its full text."
     ;; Open the file passed in with a temp buffer.
     (with-temp-buffer
       (if (file-regular-p fileName)
-	  (progn (find-file-noselect fileName)
+	  (progn (insert-file-contents fileName)
+		 (goto-char (point-min))
 		 ;; Find each occurrence of the annotations in list of valid
 		 ;; annotations.
 		 (dolist (annot rtnav-valid-annotations)
 		   ;; For each of the annotations, search for, and collect each
 		   ;; note, along
 		   ;; with it's line number.
-		   (while (re-search-forward annot (point-max) nil 1)
+		   (while (search-forward-regexp annot nil t 1)
+		     (setq lineNo '())
+		     (setq annotText '())
+		     (setq listEntry '())
 		     (goto-char (match-beginning 0))
 		     ;; Grab the line number and the text from the line.
 		     (setq lineNo (cons (what-line) lineNo))
 		     (setq annotText (cons (thing-at-point 'line) annotText))
 		     ;; Push the line number and text onto the list.
 		     (setq listEntry (cons (list lineNo annotText) listEntry))
-		     (setq masterAnnotList (cons listEntry masterAnnotList)))
-		   ))
+		     (setq masterAnnotList (cons listEntry masterAnnotList))
+		     (goto-char (match-end 0)))
+		   (goto-char (point-min))))
 	(error "Invalid file name given!")))
-    ;; Return the list of annotations for the passed file.  FIXME: this shit is
-    ;; returning nil for some reason...
+    ;; Return the list of annotations for the passed file.  FIXME: get the
+    ;; list in some sane composition so that it can be unpacked properly.
     masterAnnotList))
 
 

@@ -146,13 +146,17 @@ annotations in the dummy file along with the line number and file name of each."
     ;; Call the rtnav-search-file-for-annot function with the dummy file as an
     ;; argument and save the result in PACKEDRESULTS for unpacking.
     (setq packedResults (rtnav-search-file-for-annot (targetFile)))
+    ;; Check to ensure that the list is not nil, otherwise fail.
+    (should packedResults) ;; Keep it simple for now...
+    ;;; TODO: this part should check each entry in the list for accuracy.
     ;; Unpack the results and check them against the actual file contents.
-    (dolist (entry packedResults)
-      ;; Check the contents of the list against the actual file content.
-      ;; TODO: figure out how the contents of the file are returned by the
-      ;; function.
+    ;; (dolist (entry packedResults)
+    ;;   ;; Check the contents of the list against the actual file content.
+    ;;   ;; TODO: figure out how the contents of the file are returned by the
+    ;;   ;; function.
 
-      )))
+    ;;   )
+    ))
 
 ;; -------------- Test fixtures --------------- ;;
 
