@@ -72,42 +72,45 @@
   "The valid annotations that are parsed by rtnav."
   )
 
-(defvar rtnav-valid-comment-begin-delims (list "//" "/*" "#" ";" "<!--" "'''" "\"\"\"")
-  "The supported comment start deliminators.")
-
-(defvar rtnav-valid-comment-end-delims (list "*/" "'''" "\"\"\"" "-->")
-  "The supported comment end deliminators.")
 
 ;;;###autoload
 (define-minor-mode rtnav
   "Minor mode for alternate source tree navigation and task list generation"
-
+  :init-value nil
   :lighter " RTNAV"
-  :global
+  :global t
   :keymap (let ((rtnav-map (make-sparse-keymap)))
 	    (define-key rtnav-map (kbd "C-c C-l n") 'rtnav-goto-list-item)
 	    (define-key rtnav-map (kbd "C-c C-l s") 'rtnav-save-task-list)
 	    rtnav-map)
-  ;; Prompt the user for a directory to parse (default should be the current
-  ;; buffer's default-directory). TODO: figure out how to display the default
-  ;; dynamically. TODO: conditionally handle enabling of the mode...
-  (let ((userInputDirectory (read-file-name "Directory to parse (default %s ) : " (pwd)))
+  (if rtnav
+    (rtnav-start-setup)))
+
+(defun rtnav-start-setup ()
+  "Setup fixture for rtnav.
+
+This sets up the task list buffer for display to the user."
+  (let ((userInputDirectory
+	 (read-file-name
+	  (format "Directory to parse (default %s ) : " default-directory)))
 	(treeRoot)
 	(filesList)
 	(taskListBuffer)
-	(parsedOutput))
-    ;; If the input is nil...
+	(parsedOutput)
+	(newTaskListWin))
+    ;; If the user input is nil...
     (if (not userInputDirectory)
 	;; Make the default directory treeRoot.
 	(setq treeRoot default-directory)
-      ;; Make userInputDirectory treeRoot if it is a directory.
+      ;; If not, make userInputDirectory treeRoot if it is a directory,
+      ;; otherwise trow an error.
       (if (file-directory-p userInputDirectory)
 	  (setq treeRoot userInputDirectory)
-	(error "Invalid directory entered!")
-	(disable-rtnav))
-      )
+	(disable-rtnav)
+	(error "Invalid directory entered!")))
     ;; Set up and open the task list buffer in a new window.
     (setq  taskListBuffer (rtnav-gen-list-buffer))
+    (setq newTaskListWin (split-window-horizontally 80))
     (switch-to-buffer-other-window taskListBuffer)
     ;; Call the function that parses the directory tree.
     (setq filesList (rtnav-parse-tree treeRoot))
@@ -116,9 +119,12 @@
       ;; Store the results in the PARSEOUTPUT variable and write that to the
       ;; task list buffer for display to the user.
       (with-current-buffer taskListBuffer
-	  ;; TODO: write list entries to buffer here...
-	  ))))
-
+	(dolist (listItem (rtnav-search-file-for-annot fileName))
+	  (insert fileName)
+	  (newline)
+	  (dolist (itemElement listItem)
+	    (insert itemElement))
+	  (newline))))))
 
 (defun rtnav-goto-list-item ()
   "Go to the list item under point."
@@ -270,7 +276,7 @@ If the specified buffer exists, the mark is moved to the point passed in."
            (goto-char markLOC))
     (message "The target buffer does not exist!")))
 
-
+;;; TODO: this function needs to be fixed to pipe the right info to the caller!
 (defun directory-files-recursive (&optional treeRoot exclude)
   "Return a list of absolute path file names recursively down a directory tree.
 
