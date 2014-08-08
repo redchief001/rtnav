@@ -89,7 +89,7 @@
 (defun rtnav-start-setup ()
   "Setup fixture for rtnav.
 
-This sets up the task list buffer for display to the user."
+Set up the task list buffer for display to the user."
   (let ((userInputDirectory
 	 (read-file-name
 	  (format "Directory to parse (default %s ) : " default-directory)))
