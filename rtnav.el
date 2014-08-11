@@ -42,31 +42,6 @@
 ;;; Code:
 
 
-
-;; For right now, every time that we start up the rtnav minor mode, these are the
-;; things that should happen:
-;;
-;; 1. The mode will prompt the user for a project root path (the default will be
-;;    the default path of the current buffer)
-;; 2. The mode will use the user input as the argument for the
-;;    directory-files-recursive function.
-;; 3. Each file in the list will be searched and the annotations and associated
-;;    text and meta-data will be extracted.
-;; 4. The extracted information will be written to  a buffer and displayed to the
-;;    user.
-;; 5. When the user invokes the proper key command while point is on a list item,
-;;    the associated source file will be displayed in the other window with the
-;;    point at the location of the annotation.
-;; 6. Once the user has completed the task that was annotated, they will then
-;;    erase the annotation text from the source file and save the buffer.
-;; 7. When the buffer containing the annotation is saved, the list is re-compiled
-;;    and should display the updated tasks/annotations.
-;; 8. When the user invokes the 'save task list to file' command, the contents
-;;    of the task list buffer are written to an output file at the project
-;;    directory root.
-;; 9. When the task list buffer is killed by the user, the mode is automatically
-;;    disabled.
-
 ;; Extend rtnav with other types of annotations by adding to this list.
 (defvar rtnav-valid-annotations (list "TODO" "FIXME" "XXXX" "NOTE")
   "The valid annotations that are parsed by rtnav."
@@ -92,17 +67,18 @@
 Set up the task list buffer for display to the user."
   (let ((userInputDirectory
 	 (read-file-name
-	  (format "Directory to parse (default %s ) : " default-directory)))
+	  (format "Directory to parse (default %s ) : "
+		  (file-truename default-directory))))
 	(treeRoot)
 	(filesList)
 	(taskListBuffer)
 	(parsedOutput)
 	(newTaskListWin))
     ;; If the user input is nil...
-    (if (not userInputDirectory)
+    (if (string= userInputDirectory "")
 	;; Make the default directory treeRoot.
 	(setq treeRoot default-directory)
-      ;; If not, make userInputDirectory treeRoot if it is a directory,
+      ;; Make userInputDirectory treeRoot if it is a directory (treeRoot is nil),
       ;; otherwise trow an error.
       (if (file-directory-p userInputDirectory)
 	  (setq treeRoot userInputDirectory)
@@ -115,16 +91,16 @@ Set up the task list buffer for display to the user."
     ;; Call the function that parses the directory tree.
     (setq filesList (rtnav-parse-tree treeRoot))
     ;; For each file returned, call the file parsing function.
-    (dolist (fileName filesList)
+    (dolist (fileListItem filesList)
       ;; Store the results in the PARSEOUTPUT variable and write that to the
       ;; task list buffer for display to the user.
-      (with-current-buffer taskListBuffer
-	(dolist (listItem (rtnav-search-file-for-annot fileName))
-	  (insert fileName)
-	  (newline)
-	  (dolist (itemElement listItem)
-	    (insert itemElement))
-	  (newline))))))
+      (set-buffer taskListBuffer)
+      (dolist (listItem (rtnav-search-file-for-annot fileListItem))
+	(insert fileListItem)
+	(newline)
+	(dolist (itemElement listItem)
+	  (insert itemElement))
+	(newline)))))
 
 (defun rtnav-goto-list-item ()
   "Go to the list item under point."
@@ -161,29 +137,31 @@ its full text."
 	(listEntry))
     ;; Open the file passed in with a temp buffer.
     (with-temp-buffer
-      (if (file-regular-p fileName)
-	  (progn (insert-file-contents fileName)
-		 (goto-char (point-min))
-		 ;; Find each occurrence of the annotations in list of valid
-		 ;; annotations.
-		 (dolist (annot rtnav-valid-annotations)
-		   ;; For each of the annotations, search for, and collect each
-		   ;; note, along
-		   ;; with it's line number.
-		   (while (search-forward-regexp annot nil t 1)
-		     (setq lineNo '())
-		     (setq annotText '())
-		     (setq listEntry '())
-		     (goto-char (match-beginning 0))
-		     ;; Grab the line number and the text from the line.
-		     (setq lineNo (cons (what-line) lineNo))
-		     (setq annotText (cons (thing-at-point 'line) annotText))
-		     ;; Push the line number and text onto the list.
-		     (setq listEntry (cons (list lineNo annotText) listEntry))
-		     (setq masterAnnotList (cons listEntry masterAnnotList))
-		     (goto-char (match-end 0)))
-		   (goto-char (point-min))))
-	(error "Invalid file name given!")))
+      (cond
+       ((file-regular-p fileName)
+	(insert-file-contents fileName)
+	(goto-char (point-min))
+	;; Find each occurrence of the annotations in list of valid
+	;; annotations.
+	(dolist (annot rtnav-valid-annotations)
+	  ;; For each of the annotations, search for, and collect each
+	  ;; note, along
+	  ;; with it's line number.
+	  (while (search-forward-regexp annot nil t 1)
+	    (setq lineNo '())
+	    (setq annotText '())
+	    (setq listEntry '())
+	    (goto-char (match-beginning 0))
+	    ;; Grab the line number and the text from the line.
+	    (setq lineNo (cons (what-line) lineNo))
+	    (setq annotText (cons (thing-at-point 'line) annotText))
+	    ;; Push the line number and text onto the list.
+	    (setq listEntry (cons (list lineNo annotText) listEntry))
+	    (setq masterAnnotList (cons listEntry masterAnnotList))
+	    (goto-char (match-end 0)))
+	  (goto-char (point-min))))
+       (t
+	(error "Invalid file name given!"))))
     ;; Return the list of annotations for the passed file.  FIXME: get the
     ;; list in some sane composition so that it can be unpacked properly.
     masterAnnotList))
@@ -196,7 +174,8 @@ Takes the root of the project tree as argument SOURCETREEROOT and returns a
 list of absolute paths to all possible source code files in the working tree
 ignoring dot files, backups, and other such trash."
   (interactive)
-  (let (fileNames '() treeRoot)
+  (let ((fileNames)
+	(treeRoot))
        ;; Set the treeRoot variable based on the argument
        (if sourceTreeRoot
            (progn
@@ -210,7 +189,7 @@ ignoring dot files, backups, and other such trash."
        ;; the filenames retuned byt the function absolute paths? I think that
        ;; will need absolute paths for this function to be useful, so make that
        ;; happen!
-       (add-to-list 'fileNames (directory-files-recursive ))
+       (add-to-list 'fileNames (directory-files-recursive sourceTreeRoot "^\\..*$"))
        ;;FIXME: fix the above function call!
        ))
 
@@ -234,14 +213,13 @@ if these are found in the line under point."
         ;; the file name at the beginning of the line followed by the line no.
         (goto-char (point-min))
         (if (not (search-forward-regexp ".+?\\..+?\\b"))
-          (message "Error: content not found!")
-          (progn
-            (setq fileName (thing-at-point 'filename))
-            (goto-char (point-min))
-            (search-forward-regexp "[0-9]")
-            (setq lineNo (thing-at-point 'filename))
-            ;; push the fileName and lineNo onto a list and return it.
-            (setq fileAndLine (list fileName lineNo))))))))
+	    (message "Error: content not found!")
+	  (setq fileName (thing-at-point 'filename))
+	  (goto-char (point-min))
+	  (search-forward-regexp "[0-9]")
+	  (setq lineNo (thing-at-point 'filename))
+	  ;; push the fileName and lineNo onto a list and return it.
+	  (setq fileAndLine (list fileName lineNo)))))))
 
 
 (defun rtnav-open-file-other-window (targetFile)
@@ -277,11 +255,11 @@ If the specified buffer exists, the mark is moved to the point passed in."
     (message "The target buffer does not exist!")))
 
 ;;; TODO: this function needs to be fixed to pipe the right info to the caller!
-(defun directory-files-recursive (&optional treeRoot exclude)
+(defun directory-files-recursive (&optional treeRoot &rest excludes)
   "Return a list of absolute path file names recursively down a directory tree.
 
 Takes TREEROOT and EXCLUDE as arguments and recursively gathers all file names
-in TREEROOT (absolute paths) excluding file names that do not match EXCLUDE
+in TREEROOT (absolute paths) excluding file names that do not match EXCLUDES
 and returns them in a list to the caller.  TODO: add the exclude functionality."
   (interactive)
   (let ((myFileList)
@@ -297,8 +275,11 @@ and returns them in a list to the caller.  TODO: add the exclude functionality."
     (cd projectRoot)
     (dolist (fileItem myFileList)
       (catch 'skip
+	(dolist (excludeItem excludes)
+	  (if (string-match-p excludeItem fileItem)
+	      (throw 'skip nil)))
         (cond
-         ((string= fileItem ".")
+	 ((string= fileItem ".")
           (message "Skipping .")
           (throw 'skip nil))
          ((string= fileItem "..")
