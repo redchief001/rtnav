@@ -157,7 +157,7 @@ its full text."
 	    (setq annotText (cons (thing-at-point 'line) annotText))
 	    ;; Push the line number and text onto the list.
 	    (setq listEntry (cons (list lineNo annotText) listEntry))
-	    (setq masterAnnotList (cons listEntry masterAnnotList))
+	    (append listEntry masterAnnotList)
 	    (goto-char (match-end 0)))
 	  (goto-char (point-min))))
        (t
@@ -189,7 +189,8 @@ ignoring dot files, backups, and other such trash."
        ;; the filenames retuned byt the function absolute paths? I think that
        ;; will need absolute paths for this function to be useful, so make that
        ;; happen!
-       (add-to-list 'fileNames (directory-files-recursive sourceTreeRoot "^\\..*$"))
+       (append fileNames
+		    (directory-files-recursive sourceTreeRoot "^\\..*$"))
        ;;FIXME: fix the above function call!
        ))
 
