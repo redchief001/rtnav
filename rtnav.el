@@ -42,31 +42,6 @@
 ;;; Code:
 
 
-
-;; For right now, every time that we start up the rtnav minor mode, these are the
-;; things that should happen:
-;;
-;; 1. The mode will prompt the user for a project root path (the default will be
-;;    the default path of the current buffer)
-;; 2. The mode will use the user input as the argument for the
-;;    directory-files-recursive function.
-;; 3. Each file in the list will be searched and the annotations and associated
-;;    text and meta-data will be extracted.
-;; 4. The extracted information will be written to  a buffer and displayed to the
-;;    user.
-;; 5. When the user invokes the proper key command while point is on a list item,
-;;    the associated source file will be displayed in the other window with the
-;;    point at the location of the annotation.
-;; 6. Once the user has completed the task that was annotated, they will then
-;;    erase the annotation text from the source file and save the buffer.
-;; 7. When the buffer containing the annotation is saved, the list is re-compiled
-;;    and should display the updated tasks/annotations.
-;; 8. When the user invokes the 'save task list to file' command, the contents
-;;    of the task list buffer are written to an output file at the project
-;;    directory root.
-;; 9. When the task list buffer is killed by the user, the mode is automatically
-;;    disabled.
-
 ;; Extend rtnav with other types of annotations by adding to this list.
 (defvar rtnav-valid-annotations (list "TODO" "FIXME" "XXXX" "NOTE")
   "The valid annotations that are parsed by rtnav."
@@ -196,7 +171,8 @@ Takes the root of the project tree as argument SOURCETREEROOT and returns a
 list of absolute paths to all possible source code files in the working tree
 ignoring dot files, backups, and other such trash."
   (interactive)
-  (let (fileNames '() treeRoot)
+  (let ((fileNames)
+	(treeRoot))
        ;; Set the treeRoot variable based on the argument
        (if sourceTreeRoot
            (progn
@@ -210,7 +186,10 @@ ignoring dot files, backups, and other such trash."
        ;; the filenames retuned byt the function absolute paths? I think that
        ;; will need absolute paths for this function to be useful, so make that
        ;; happen!
-       (add-to-list 'fileNames (directory-files-recursive ))
+
+       ;; TODO: there will need to be more exclude cases to get rid of unwanted
+       ;; files being parsed in the tool...
+       (add-to-list 'fileNames (directory-files-recursive treeRoot "^\..*$"))
        ;;FIXME: fix the above function call!
        ))
 
@@ -276,12 +255,13 @@ If the specified buffer exists, the mark is moved to the point passed in."
            (goto-char markLOC))
     (message "The target buffer does not exist!")))
 
+
 ;;; TODO: this function needs to be fixed to pipe the right info to the caller!
-(defun directory-files-recursive (&optional treeRoot exclude)
+(defun directory-files-recursive (&optional treeRoot &rest excludes)
   "Return a list of absolute path file names recursively down a directory tree.
 
 Takes TREEROOT and EXCLUDE as arguments and recursively gathers all file names
-in TREEROOT (absolute paths) excluding file names that do not match EXCLUDE
+in TREEROOT (absolute paths) excluding file names that do not match EXCLUDES
 and returns them in a list to the caller.  TODO: add the exclude functionality."
   (interactive)
   (let ((myFileList)
@@ -298,6 +278,9 @@ and returns them in a list to the caller.  TODO: add the exclude functionality."
     (dolist (fileItem myFileList)
       (catch 'skip
         (cond
+	 ((or (dolist (excludedItem excludes)
+		(string-match-p excludedItem fileItem))
+	      (throw 'skip nil)))
          ((string= fileItem ".")
           (message "Skipping .")
           (throw 'skip nil))
