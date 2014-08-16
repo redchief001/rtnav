@@ -97,15 +97,30 @@ Set up the task list buffer for display to the user."
       (goto-char (point-max))
       (dolist (listItem (rtnav-search-file-for-annot fileListItem))
 	(insert fileListItem)
-	(newline)
+	(insert "  ")
 	(dolist (itemElement listItem)
-	  (insert itemElement))
+	  (insert itemElement)
+	  (insert "  "))
 	(newline)))))
 
 (defun rtnav-goto-list-item ()
-  "Go to the list item under point."
+  "Go to the list item under point.
+
+This function makes use of rtnav-get-file-and-line function to open the source
+code file corresponding to the task list item in the other window for editing."
   (interactive)
-)
+  (let (infoList
+	fName
+	lNumber)
+    ;; Call the get-file-and-line function and assign the list returned to INFOLIST.
+    (setq infoList (rtnav-get-file-line))
+    ;; Assign each element to the respective variables.
+    (setq fName (car infoList))
+    (setq lNumber (car infoList))
+    ;; Open the target file in the other window.
+    (find-file-other-window fName)
+    (goto-char (point-min))
+    (forward-line (1- lNumber))))
 
 
 (defun rtnav-save-task-list ()
@@ -197,7 +212,8 @@ ignoring dot files, backups, and other such trash."
   "Grabs a file name and a line number from the line at the mark.
 
 Takes no arguments and returns a list containing a file name and a line number
-if these are found in the line under point."
+if these are found in the line under point.  TODO: make this work for all of the
+text in a 'paragraph' or block of text for different screen sizes."
   (interactive)
   (save-excursion
     (save-restriction
