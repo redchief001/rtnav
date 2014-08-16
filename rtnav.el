@@ -86,7 +86,7 @@ Set up the task list buffer for display to the user."
 	(error "Invalid directory entered!")))
     ;; Set up and open the task list buffer in a new window.
     (setq  taskListBuffer (rtnav-gen-list-buffer))
-    (setq newTaskListWin (split-window-horizontally 80))
+    (setq newTaskListWin (split-window-horizontally 90))
     (switch-to-buffer-other-window taskListBuffer)
     ;; Call the function that parses the directory tree.
     (setq filesList (rtnav-parse-tree treeRoot))
@@ -95,6 +95,7 @@ Set up the task list buffer for display to the user."
       ;; Store the results in the PARSEOUTPUT variable and write that to the
       ;; task list buffer for display to the user.
       (set-buffer taskListBuffer)
+      (goto-char (point-max))
       (dolist (listItem (rtnav-search-file-for-annot fileListItem))
 	(insert fileListItem)
 	(newline)
