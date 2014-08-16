@@ -94,7 +94,6 @@ Set up the task list buffer for display to the user."
     (dolist (fileListItem filesList)
       ;; Store the results in the PARSEOUTPUT variable and write that to the
       ;; task list buffer for display to the user.
-      (set-buffer taskListBuffer)
       (goto-char (point-max))
       (dolist (listItem (rtnav-search-file-for-annot fileListItem))
 	(insert fileListItem)
@@ -157,8 +156,8 @@ its full text."
 	    (setq lineNo (cons (what-line) lineNo))
 	    (setq annotText (cons (thing-at-point 'line) annotText))
 	    ;; Push the line number and text onto the list.
-	    (setq listEntry (cons (list lineNo annotText) listEntry))
-	    (append listEntry masterAnnotList)
+	    (setq listEntry (append  lineNo annotText))
+	    (setq masterAnnotList (cons listEntry masterAnnotList))
 	    (goto-char (match-end 0)))
 	  (goto-char (point-min))))
        (t
@@ -280,9 +279,6 @@ and returns them in a list to the caller.  TODO: add the exclude functionality."
 	  (if (string-match-p excludeItem fileItem)
 	      (throw 'skip nil)))
         (cond
-	 ((or (dolist (excludedItem excludes)
-		(string-match-p excludedItem fileItem))
-	      (throw 'skip nil)))
          ((string= fileItem ".")
           (message "Skipping .")
           (throw 'skip nil))
