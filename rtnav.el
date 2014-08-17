@@ -114,13 +114,48 @@ code file corresponding to the task list item in the other window for editing."
 	lNumber)
     ;; Call the get-file-and-line function and assign the list returned to INFOLIST.
     (setq infoList (rtnav-get-file-line))
+    (print infoList)
     ;; Assign each element to the respective variables.
-    (setq fName (car infoList))
-    (setq lNumber (car infoList))
+    (setq fName (pop infoList))
+    (setq lNumber (pop infoList))
     ;; Open the target file in the other window.
     (find-file-other-window fName)
+    (set-buffer fName)
     (goto-char (point-min))
     (forward-line (1- lNumber))))
+
+
+(defun rtnav-get-file-line ()
+  "Grabs a file name and a line number from the line at the mark.
+
+Takes no arguments and returns a list containing a file name and a line number
+if these are found in the line under point.  TODO: make this work for all of the
+text in a 'paragraph' or block of text for different screen sizes."
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (let (fileName
+	    lineNo
+	    fileAndLine)
+        ;; Narrow the region to the current line.
+        (narrow-to-region (line-beginning-position)
+                          (line-end-position))
+        ;; Each search will be from the begining of the line. First search for
+        ;; the file name, then the line number. The format of the list file has
+        ;; the file name at the beginning of the line followed by the line no.
+        (goto-char (point-min))
+        (if (not (search-forward-regexp "^.+?\\b"))
+	    (error "Content not found!")
+	  (goto-char (match-beginning 0))
+	  (setq fileName (thing-at-point 'filename))
+	  (goto-char (match-end 0))
+	  ;; (search-forward-regexp "\\b[0-9]*\\b")
+	  (forward-char 7)
+	  (setq lineNo (current-word))
+	  ;; push the fileName and lineNo onto a list and return it.
+	  (setq fileAndLine
+		(append
+		 (list fileName (string-to-number lineNo)) fileAndLine)))))))
 
 
 (defun rtnav-save-task-list ()
@@ -206,35 +241,6 @@ ignoring dot files, backups, and other such trash."
        ;; happen!
        (append fileNames
 		    (directory-files-recursive sourceTreeRoot "^\\..*$"))))
-
-
-(defun rtnav-get-file-line ()
-  "Grabs a file name and a line number from the line at the mark.
-
-Takes no arguments and returns a list containing a file name and a line number
-if these are found in the line under point.  TODO: make this work for all of the
-text in a 'paragraph' or block of text for different screen sizes."
-  (interactive)
-  (save-excursion
-    (save-restriction
-      (let (fileName
-	    lineNo
-	    fileAndLine)
-        ;; Narrow the region to the current line.
-        (narrow-to-region (line-beginning-position)
-                          (line-end-position))
-        ;; Each search will be from the begining of the line. First search for
-        ;; the file name, then the line number. The format of the list file has
-        ;; the file name at the beginning of the line followed by the line no.
-        (goto-char (point-min))
-        (if (not (search-forward-regexp ".+?\\..+?\\b"))
-	    (message "Error: content not found!")
-	  (setq fileName (thing-at-point 'filename))
-	  (goto-char (point-min))
-	  (search-forward-regexp "[0-9]")
-	  (setq lineNo (thing-at-point 'filename))
-	  ;; push the fileName and lineNo onto a list and return it.
-	  (setq fileAndLine (list fileName lineNo)))))))
 
 
 (defun rtnav-open-file-other-window (targetFile)
