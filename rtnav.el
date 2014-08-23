@@ -92,6 +92,7 @@ Set up the task list buffer for display to the user."
     ;; For each file returned, call the file parsing function.
     (dolist (fileListItem filesList)
       ;; Go to the end of the last entry.
+      ;; TODO: duplicate entries should be eliminated!
       (goto-char (point-max))
       ;; For each annotation...
       (dolist (listItem (rtnav-search-file-for-annot fileListItem))
@@ -101,7 +102,16 @@ Set up the task list buffer for display to the user."
 	(dolist (itemElement listItem)
 	  (insert itemElement)
 	  (insert "  "))
-	(newline)))))
+	(newline)))
+    (rtnav-remove-duplicates)))
+
+
+(defun rtnav-remove-duplicates ()
+  "Remove duplicates from the task list buffer."
+(insteractive)
+(let ()
+  ))
+
 
 (defun rtnav-goto-list-item ()
   "Go to the list item under point.
@@ -198,10 +208,9 @@ its full text."
 	;; annotations.
 	(dolist (annot rtnav-valid-annotations)
 	  ;; For each of the annotations, search for, and collect each
-	  ;; note, along
-	  ;; with it's line number.
+	  ;; note, along with it's line number.
 	  (while (search-forward-regexp annot nil t 1)
-	    ;; TODO: here is where the text properties should be checked
+	    ;; Here is where the text properties should be checked
 	    ;; for a comment face.
 	    (setq tPropList (text-properties-at (point)))
 	    (dolist (textProp tPropList)
@@ -218,8 +227,6 @@ its full text."
 		       (setq lineNo (cons (what-line) lineNo))
 		       (setq annotText (cons (thing-at-point 'line) annotText))
 		       ;; Push the line number and text onto the list.
-		       ;; TODO: check to see if the line number is already in the
-		       ;; master list before pushing it!
 		       (setq listEntry (append  lineNo annotText))
 		       (setq masterAnnotList (cons listEntry masterAnnotList))
 		       (goto-char (match-end 0))
