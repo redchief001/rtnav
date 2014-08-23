@@ -184,13 +184,16 @@ its full text."
   (let ((masterAnnotList)
 	(lineNo)
 	(annotText)
-	(listEntry))
-    ;; Open the file passed in with a temp buffer.
-    (with-temp-buffer
-      (cond
-       ((file-regular-p fileName)
-	(insert-file-contents fileName)
+	(listEntry)
+	(inComment)
+	(tPropList))
+    ;; Open the file passed in if it is a regular file.
+    (cond
+     ((file-regular-p fileName)
+      (with-current-buffer (find-file-noselect fileName)
 	(goto-char (point-min))
+	;; Ensure that font-lock scans the whole file.
+	(font-lock-fontify-buffer)
 	;; Find each occurrence of the annotations in list of valid
 	;; annotations.
 	(dolist (annot rtnav-valid-annotations)
@@ -198,24 +201,37 @@ its full text."
 	  ;; note, along
 	  ;; with it's line number.
 	  (while (search-forward-regexp annot nil t 1)
-	    (setq lineNo '())
-	    (setq annotText '())
-	    (setq listEntry '())
-	    (goto-char (match-beginning 0))
-	    ;; Grab the line number and the text from the line.
-	    (setq lineNo (cons (what-line) lineNo))
-	    (setq annotText (cons (thing-at-point 'line) annotText))
-	    ;; Push the line number and text onto the list.
-	    ;; TODO: check to see if the line number is already in the
-	    ;; master list before pushing it!
-	    (setq listEntry (append  lineNo annotText))
-	    (setq masterAnnotList (cons listEntry masterAnnotList))
-	    (goto-char (match-end 0)))
-	  (goto-char (point-min))))
-       (t
-	(error "Invalid file name given!"))))
-    ;; Return the list of annotations for the passed file.  FIXME: get the
-    ;; list in some sane composition so that it can be unpacked properly.
+	    ;; TODO: here is where the text properties should be checked
+	    ;; for a comment face.
+	    (setq tPropList (text-properties-at (point)))
+	    (dolist (textProp tPropList)
+	      (if (eq textProp (or font-lock-comment-face font-lock-comment-delimiter-face))
+		  (setq inComment 1)))
+	    ;; If the char at point is inside a comment...
+	    (if inComment
+		(progn (setq lineNo '())
+		       (setq annotText '())
+		       (setq listEntry '())
+		       ;; Go to the beginning of the last match.
+		       (goto-char (match-beginning 0))
+		       ;; Grab the line number and the text from the line.
+		       (setq lineNo (cons (what-line) lineNo))
+		       (setq annotText (cons (thing-at-point 'line) annotText))
+		       ;; Push the line number and text onto the list.
+		       ;; TODO: check to see if the line number is already in the
+		       ;; master list before pushing it!
+		       (setq listEntry (append  lineNo annotText))
+		       (setq masterAnnotList (cons listEntry masterAnnotList))
+		       (goto-char (match-end 0))
+		       ;; reset the comment flag.
+		       (setq inComment nil))))
+	  (goto-char (point-min)))))
+     (t
+      (error "Invalid file name given!")))
+    ;; Delete the buffer as cleanup.
+    (kill-buffer fileName)
+    ;; Return the list of annotations for the passed file.  FIXME: get the list
+    ;; in some sane composition so that it can be unpacked properly.
     masterAnnotList))
 
 
@@ -278,7 +294,6 @@ If the specified buffer exists, the mark is moved to the point passed in."
     (message "The target buffer does not exist!")))
 
 
-;;; TODO: this function needs to be fixed to pipe the right info to the caller!
 (defun directory-files-recursive (&optional treeRoot &rest excludes)
   "Return a list of absolute path file names recursively down a directory tree.
 
