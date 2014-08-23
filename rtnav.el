@@ -92,7 +92,6 @@ Set up the task list buffer for display to the user."
     ;; For each file returned, call the file parsing function.
     (dolist (fileListItem filesList)
       ;; Go to the end of the last entry.
-      ;; TODO: duplicate entries should be eliminated!
       (goto-char (point-max))
       ;; For each annotation...
       (dolist (listItem (rtnav-search-file-for-annot fileListItem))
@@ -108,9 +107,17 @@ Set up the task list buffer for display to the user."
 
 (defun rtnav-remove-duplicates ()
   "Remove duplicates from the task list buffer."
-(insteractive)
+(interactive)
 (let ()
-  ))
+  (with-current-buffer "Todo.list"
+    ;; Narrow to a region where entries all have the same file name.
+
+    ;; Sort the entries in the region by line number field.
+
+    ;; Determine if there are duplicate entries and eliminate all but one.
+
+    ;; Do the same for the rest of the file entry groups.
+    )))
 
 
 (defun rtnav-goto-list-item ()
@@ -187,9 +194,8 @@ text in a 'paragraph' or block of text for different screen sizes."
   "Search the passed file for annotations returning results list.
 
 Takes FILENAME as an argument and searches that file for annotations within
-comments.  The comment deliminators are determined based on file extension.
-Returns a list that contains sub-lists that have an annotations start line and
-its full text."
+comments.  This function uses \"font-lock-mode\" to determine which annotations
+are inside comments and parses those into the returned structure."
   (interactive)
   (let ((masterAnnotList)
 	(lineNo)
