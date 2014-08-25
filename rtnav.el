@@ -43,7 +43,7 @@
 
 
 ;; Extend rtnav with other types of annotations by adding to this list.
-(defvar rtnav-valid-annotations (list "TODO" "FIXME" "XXXX" "NOTE")
+(defvar rtnav-valid-annotations (list "\\bTODO\\b" "\\bFIXME\\b" "\\bXXXX\\b" "\\bNOTE\\b")
   "The valid annotations that are parsed by rtnav."
   )
 
@@ -108,10 +108,19 @@ Set up the task list buffer for display to the user."
 (defun rtnav-remove-duplicates ()
   "Remove duplicates from the task list buffer."
 (interactive)
-(let ()
+(let (fileName)
   (with-current-buffer "Todo.list"
     ;; Narrow to a region where entries all have the same file name.
-
+    ;; It would be good if we could select an area that includes
+    ;; a group of annotations from one file and so on for the rest
+    ;; of the buffer.
+    (goto-char (point-min))
+    (save-excursion
+      (save-restriction
+	;; Inside this zone the region can be restricted.
+	;; Grab the first field which should be the file name.
+	(setq fileName (thing-at-point 'word))
+	(narrow-to-region )))
     ;; Sort the entries in the region by line number field.
 
     ;; Determine if there are duplicate entries and eliminate all but one.
@@ -215,9 +224,9 @@ are inside comments and parses those into the returned structure."
 	(dolist (annot rtnav-valid-annotations)
 	  ;; For each of the annotations, search for, and collect each
 	  ;; note, along with it's line number.
+	  (setq case-fold-search nil) ;; Set case sensitive searching off.
 	  (while (search-forward-regexp annot nil t 1)
-	    ;; Here is where the text properties should be checked
-	    ;; for a comment face.
+	    ;; Check the text properties for a comment.
 	    (setq tPropList (text-properties-at (point)))
 	    (dolist (textProp tPropList)
 	      (if (eq textProp (or font-lock-comment-face font-lock-comment-delimiter-face))
