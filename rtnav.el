@@ -108,25 +108,21 @@ Set up the task list buffer for display to the user."
 (defun rtnav-remove-duplicates ()
   "Remove duplicates from the task list buffer."
 (interactive)
-(let (fileName)
+(let (beginMark
+      endMark)
   (with-current-buffer "Todo.list"
-    ;; Narrow to a region where entries all have the same file name.
-    ;; It would be good if we could select an area that includes
-    ;; a group of annotations from one file and so on for the rest
-    ;; of the buffer.
     (goto-char (point-min))
     (save-excursion
-      (save-restriction
-	;; Inside this zone the region can be restricted.
-	;; Grab the first field which should be the file name.
-	(setq fileName (thing-at-point 'word))
-	(narrow-to-region )))
-    ;; Sort the entries in the region by line number field.
+      ;; Eliminate blank lines for sort operation.
 
-    ;; Determine if there are duplicate entries and eliminate all but one.
+      ;; Sort the lines in the file by file name.
+      (sort-fields 1 (point-min) (point-max))
 
-    ;; Do the same for the rest of the file entry groups.
-    )))
+      ;; Sort each file name region by line number.
+
+      ;; Remove duplicates from each file name region.
+      ))))
+
 
 
 (defun rtnav-goto-list-item ()
@@ -139,6 +135,7 @@ code file corresponding to the task list item in the other window for editing."
 	fName
 	lNumber)
     ;; Call the get-file-and-line function and assign the list returned to INFOLIST.
+    ;; XXXX: more random ass shit...
     (setq infoList (rtnav-get-file-line))
     (print infoList)
     ;; Assign each element to the respective variables.
