@@ -102,27 +102,44 @@ Set up the task list buffer for display to the user."
 	  (insert itemElement)
 	  (insert "  "))
 	(newline)))
-    (rtnav-remove-duplicates)))
+    ;;(rtnav-remove-duplicates)
+    ))
 
 
 (defun rtnav-remove-duplicates ()
   "Remove duplicates from the task list buffer."
 (interactive)
 (let (beginMark
-      endMark)
+      endMark
+      fileName
+      fileNameList)
   (with-current-buffer "Todo.list"
     (goto-char (point-min))
     (save-excursion
-      ;; Eliminate blank lines for sort operation.
-
       ;; Sort the lines in the file by file name.
-      (sort-fields 1 (point-min) (point-max))
+      (sort-lines 1 (point-min) (point-max))
+      ;; TODO: This is where we need some iteration to
+      ;; sort all of the line numbers in each file name
+      ;; group.
 
+      ;; First grab the first file name.
+      (search-forward-regexp "^.+\\..*\\b")
+      (goto-char (match-beginning 0))
+      ;; Set the "beginMark" to the file name.
+      (setq fileName (thing-at-point 'symbol))
+      (setq beginMark fileName)
+      ;; Set the "endMark" to the end of the last line
+      ;; that starts with that file name.
+      (while (search-forward-regexp fileName)
+	(goto-char (match-end 0)))
+      (setq endMark (progn
+		      (forward-line)
+		      (line-end-position)))
+      (narrow-to-region beginMark endMark)
       ;; Sort each file name region by line number.
-
+      (sort-lines 3 (point-min) (point-max))
       ;; Remove duplicates from each file name region.
       ))))
-
 
 
 (defun rtnav-goto-list-item ()
@@ -184,6 +201,7 @@ text in a 'paragraph' or block of text for different screen sizes."
 (defun rtnav-save-task-list ()
   "Save the current task list to a file."
   (interactive)
+  ;; TODO: implement this...
 )
 
 
