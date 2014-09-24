@@ -10,12 +10,14 @@ describes. As everything here is a work in progress, I welcome any and all
 suggestions on how to make things better.
 
 
-This tool is a minor mode for Emacs that enables the user to make use of the
-output file generated organically to navigate to annotations within the users
-source tree.
+This tool is a minor mode for Emacs that enables the user to make use of
+annotations within comments left by developers as markers and reminders to
+navigate to areas of code that may at some point have been a priority. This is just
+another alternative to the many excelent option that Emacs users already have for
+navigating their source code.
 
 
-When the user attempts to enter eltodo-mode, the mode will prompt the user for a
+When the user attempts to enter rtnav-mode, the mode will prompt the user for a
 directory to process (the current one being the default) and will compile a list
 of annotations found in source code files along with the accompanying text.
 

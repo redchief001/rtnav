@@ -44,13 +44,14 @@
 
 ;; Extend rtnav with other types of annotations by adding to this list.
 (defvar rtnav-valid-annotations (list "\\bTODO\\b" "\\bFIXME\\b" "\\bXXXX\\b" "\\bNOTE\\b")
-  "The valid annotations that are parsed by rtnav."
+  "The valid annotations that are parsed by rtnav.  Add to this list to extend."
   )
 
 
 ;;;###autoload
 (define-minor-mode rtnav
   "Minor mode for alternate source tree navigation and task list generation"
+
   :init-value nil
   :lighter " RTNAV"
   :global t
@@ -102,12 +103,13 @@ Set up the task list buffer for display to the user."
 	  (insert itemElement)
 	  (insert "  "))
 	(newline)))
-    ;;(rtnav-remove-duplicates)
+    ;;(rtnav-remove-duplicates) TODO: un-comment this when the function is done...
     ))
 
 
 (defun rtnav-remove-duplicates ()
   "Remove duplicates from the task list buffer."
+
 (interactive)
 (let (beginMark
       endMark
