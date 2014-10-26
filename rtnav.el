@@ -43,6 +43,7 @@
 
 
 ;; Extend rtnav with other types of annotations by adding to this list.
+;;;###autoload
 (defvar rtnav-valid-annotations (list "\\bTODO\\b" "\\bFIXME\\b" "\\bXXXX\\b" "\\bNOTE\\b")
   "The valid annotations that are parsed by rtnav.  Add to this list to extend."
   )
@@ -61,6 +62,23 @@
 	    rtnav-map)
   (if rtnav
       (rtnav-start-setup)))
+
+
+;;;###autoload
+(defun enable-rtnav ()
+  "Enable alternate source tree navigation and task organization."
+  (interactive)
+  (rtnav +1)
+  )
+
+
+;;;###autoload
+(defun disable-rtnav ()
+  "Disable alternate souce tree navigation and task organization."
+  (interactive)
+  (rtnav -1)
+  )
+
 
 (defun rtnav-start-setup ()
   "Setup fixture for rtnav.
@@ -102,8 +120,7 @@ Set up the task list buffer for display to the user."
 	  (insert itemElement)
 	  (insert "  "))
 	(newline)))
-    ;;(rtnav-uniquify-all-lines-buffer) TODO: un-comment this when the function is done...
-    ))
+    (rtnav-uniquify-all-lines-buffer)))
 
 
 (defun rtnav-uniquify-all-lines-region (start end)
@@ -121,7 +138,21 @@ Set up the task list buffer for display to the user."
 (defun rtnav-uniquify-all-lines-buffer ()
   "Delete duplicate lines in buffer and keep first occurrence."
   (interactive "*")
-  (uniquify-all-lines-region (point-min) (point-max)))
+  (rtnav-uniquify-all-lines-region (point-min) (point-max)))
+
+
+(defun rtnav-kill-blank-lines ()
+  "Remove blank lines from the task list buffer."
+  (interactive)
+
+  )
+
+
+(defun rtnav-sort-lines-in-buffer ()
+  "Sort the lines in the buffer based on the file and line number."
+  (interactive)
+
+  )
 
 
 (defun rtnav-goto-list-item ()
@@ -182,7 +213,7 @@ text in a 'paragraph' or block of text for different screen sizes."
   "Save the current task list to a file."
   (interactive)
   ;; TODO: implement this...
-)
+  )
 
 
 (defun rtnav-gen-list-buffer ()
@@ -244,8 +275,8 @@ are inside comments and parses those into the returned structure."
       (error "Invalid file name!")))
     ;; Delete the buffer as cleanup.
     (kill-buffer fileName)
-    ;; Return the list of annotations for the passed file.  FIXME: get the list
-    ;; in some sane composition so that it can be unpacked properly.
+    ;; Return the list of annotations for the passed file.
+    ;; TODO: sort the contents of the list.
     masterAnnotList))
 
 
@@ -343,21 +374,6 @@ and returns them in a list to the caller.  TODO: add the exclude functionality."
         (setq mySubDirFiles (directory-files-recursive myDirectory))
         (setq myAllFiles (append myAllFiles mySubDirFiles))))
     myAllFiles))
-
-
-;; These are the commands to toggle the rtnav minor mode.
-(defun enable-rtnav ()
-  "Enable alternate source tree navigation and task organization."
-  (interactive)
-  (rtnav +1)
-  )
-
-
-(defun disable-rtnav ()
-  "Disable alternate souce tree navigation and task organization."
-  (interactive)
-  (rtnav -1)
-  )
 
 
 (provide 'rtnav)
