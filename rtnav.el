@@ -12,14 +12,14 @@
 ;;; displayed in its own buffer and can be used to navigate directly to points
 ;;; of interest within the source tree.
 ;;;
-;;; Once finished with the task, or upon making a change to the task, the
+;;; Once finished with the task, or upon making a change to the task list, the
 ;;; saving of the task list buffer automatically updates the list contents.
 ;;;
 ;;; Keymap:
 ;;;
 ;;; Prefix for all commands               -> C-c C-l
-;;; Navigate to the list item under point -> C-c C-l n
-;;; Save task list to file                -> C-c C-l s
+;;; Navigate to the list item under point -> n
+;;; Save task list to file                -> s
 ;;;
 ;;; Copyright (c) 2014 James Nicholson
 ;;;
@@ -60,11 +60,10 @@
 	    (define-key rtnav-map (kbd "C-c C-l s") 'rtnav-save-task-list)
 	    rtnav-map)
   (if rtnav
-    (rtnav-start-setup)))
+      (rtnav-start-setup)))
 
 (defun rtnav-start-setup ()
   "Setup fixture for rtnav.
-
 Set up the task list buffer for display to the user."
   (let ((userInputDirectory
 	 (read-file-name
@@ -103,50 +102,30 @@ Set up the task list buffer for display to the user."
 	  (insert itemElement)
 	  (insert "  "))
 	(newline)))
-    ;;(rtnav-remove-duplicates) TODO: un-comment this when the function is done...
+    ;;(rtnav-uniquify-all-lines-buffer) TODO: un-comment this when the function is done...
     ))
 
 
-(defun rtnav-remove-duplicates ()
-  "Remove duplicates from the task list buffer."
+(defun rtnav-uniquify-all-lines-region (start end)
+  "Find duplicate lines in region START to END keeping first occurrence."
+  (interactive "*r")
+  (save-excursion
+    (let ((end (copy-marker end)))
+      (while
+	  (progn
+	    (goto-char start)
+	    (re-search-forward "^\\(.*\\)\n\\(\\(.*\n\\)*\\)\\1\n" end t))
+	(replace-match "\\1\n\\2")))))
 
-(interactive)
-(let (beginMark
-      endMark
-      fileName
-      fileNameList)
-  (with-current-buffer "Todo.list"
-    (goto-char (point-min))
-    (save-excursion
-      ;; Sort the lines in the file by file name.
-      (sort-lines 1 (point-min) (point-max))
-      ;; TODO: This is where we need some iteration to
-      ;; sort all of the line numbers in each file name
-      ;; group.
 
-      ;; First grab the first file name.
-      (search-forward-regexp "^.+\\..*\\b")
-      (goto-char (match-beginning 0))
-      ;; Set the "beginMark" to the file name.
-      (setq fileName (thing-at-point 'symbol))
-      (setq beginMark fileName)
-      ;; Set the "endMark" to the end of the last line
-      ;; that starts with that file name.
-      (while (search-forward-regexp fileName)
-	(goto-char (match-end 0)))
-      (setq endMark (progn
-		      (forward-line)
-		      (line-end-position)))
-      (narrow-to-region beginMark endMark)
-      ;; Sort each file name region by line number.
-      (sort-lines 3 (point-min) (point-max))
-      ;; Remove duplicates from each file name region.
-      ))))
+(defun rtnav-uniquify-all-lines-buffer ()
+  "Delete duplicate lines in buffer and keep first occurrence."
+  (interactive "*")
+  (uniquify-all-lines-region (point-min) (point-max)))
 
 
 (defun rtnav-goto-list-item ()
   "Go to the list item under point.
-
 This function makes use of rtnav-get-file-and-line function to open the source
 code file corresponding to the task list item in the other window for editing."
   (interactive)
@@ -169,7 +148,6 @@ code file corresponding to the task list item in the other window for editing."
 
 (defun rtnav-get-file-line ()
   "Grabs a file name and a line number from the line at the mark.
-
 Takes no arguments and returns a list containing a file name and a line number
 if these are found in the line under point.  TODO: make this work for all of the
 text in a 'paragraph' or block of text for different screen sizes."
@@ -218,7 +196,6 @@ text in a 'paragraph' or block of text for different screen sizes."
 
 (defun rtnav-search-file-for-annot (fileName)
   "Search the passed file for annotations returning results list.
-
 Takes FILENAME as an argument and searches that file for annotations within
 comments.  This function uses \"font-lock-mode\" to determine which annotations
 are inside comments and parses those into the returned structure."
@@ -249,6 +226,7 @@ are inside comments and parses those into the returned structure."
 	      (if (eq textProp (or font-lock-comment-face font-lock-comment-delimiter-face))
 		  (setq inComment 1)))
 	    ;; If the char at point is inside a comment...
+	    ;; FIXME: this code does not get invoked as it should in all cases.
 	    (if inComment
 		(progn (setq lineNo '())
 		       (setq annotText '())
@@ -266,7 +244,7 @@ are inside comments and parses those into the returned structure."
 		       (setq inComment nil))))
 	  (goto-char (point-min)))))
      (t
-      (error "Invalid file name given!")))
+      (error "Invalid file name passed!")))
     ;; Delete the buffer as cleanup.
     (kill-buffer fileName)
     ;; Return the list of annotations for the passed file.  FIXME: get the list
@@ -276,33 +254,31 @@ are inside comments and parses those into the returned structure."
 
 (defun rtnav-parse-tree (&optional sourceTreeRoot)
   "Parse the current working directory searching for source code files.
-
 Takes the root of the project tree as argument SOURCETREEROOT and returns a
 list of absolute paths to all possible source code files in the working tree
 ignoring dot files, backups, and other such trash."
   (interactive)
   (let ((fileNames)
 	(treeRoot))
-       ;; Set the treeRoot variable based on the argument
-       (if sourceTreeRoot
-           (progn
-             (setq treeRoot sourceTreeRoot)
-             (cd treeRoot))
-         (setq treeRoot (pwd)))
-       ;; Use the directory-files-recursive function to retrieve all of the file
-       ;; names and save them in the fileNames list.
-       ;; NOTE: the fucntion used takes mandatory arguments... may need to make
-       ;; some changes to it so that it can work in this case. Question... are
-       ;; the filenames retuned byt the function absolute paths? I think that
-       ;; will need absolute paths for this function to be useful, so make that
-       ;; happen!
-       (append fileNames
-		    (directory-files-recursive sourceTreeRoot "^\\..*$"))))
+    ;; Set the treeRoot variable based on the argument
+    (if sourceTreeRoot
+	(progn
+	  (setq treeRoot sourceTreeRoot)
+	  (cd treeRoot))
+      (setq treeRoot (pwd)))
+    ;; Use the directory-files-recursive function to retrieve all of the file
+    ;; names and save them in the fileNames list.
+    ;; NOTE: the fucntion used takes mandatory arguments... may need to make
+    ;; some changes to it so that it can work in this case. Question... are
+    ;; the filenames retuned byt the function absolute paths? I think that
+    ;; will need absolute paths for this function to be useful, so make that
+    ;; happen!
+    (append fileNames
+	    (directory-files-recursive sourceTreeRoot "^\\..*$"))))
 
 
 (defun rtnav-open-file-other-window (targetFile)
   "Open the file that is passed in as an argument.
-
 Takes the name of the file to open as TARGETFILE.  When called, this function
 opens the specified file.  If the file is already open in an existing buffer,
 the function switches to that buffer."
@@ -315,7 +291,7 @@ the function switches to that buffer."
     ;; create it in another window.
     (if (file-exists-p targetFile)
         (if (buffer-live-p targetFile)
-           (set-buffer targetFile)
+	    (set-buffer targetFile)
           (progn (find-file-other-window targetFile)
                  (set-buffer targetFile)))
       (message "Error: file not found!"))))
@@ -323,19 +299,17 @@ the function switches to that buffer."
 
 (defun rtnav-move-mark-to-loc (targetBuffer markLOC)
   "Move the mark in the specified buffer to the desired location.
-
 Takes the name of TARGETBUFFER and the desired location as MARKLOC.
 If the specified buffer exists, the mark is moved to the point passed in."
   (interactive)
   (if (buffer-live-p targetBuffer)
       (with-current-buffer targetBuffer
-           (goto-char markLOC))
+	(goto-char markLOC))
     (message "The target buffer does not exist!")))
 
 
 (defun directory-files-recursive (&optional treeRoot &rest excludes)
   "Return a list of absolute path file names recursively down a directory tree.
-
 Takes TREEROOT and EXCLUDE as arguments and recursively gathers all file names
 in TREEROOT (absolute paths) excluding file names that do not match EXCLUDES
 and returns them in a list to the caller.  TODO: add the exclude functionality."
@@ -390,5 +364,4 @@ and returns them in a list to the caller.  TODO: add the exclude functionality."
 
 
 (provide 'rtnav)
-
 ;;; rtnav.el ends here

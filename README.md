@@ -37,5 +37,5 @@ in turn updates the list contents in the task list file.
 All keybindings for rtnav-mode start with `C-c C-l` then the additional keystroke
 or combination that follows.
 
-- Navigate to the list item under point -> `C-c C-l n`
-- Save task list to file                -> `C-c C-l s`
+- Navigate to the list item under point -> `n`
+- Save task list to file                -> `s`
