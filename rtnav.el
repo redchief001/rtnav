@@ -204,15 +204,17 @@ are inside comments and parses those into the returned structure."
 	(lineNo)
 	(annotText)
 	(listEntry)
-	(inComment)
-	(tPropList))
+	(inComment))
     ;; Open the file passed in if it is a regular file.
     (cond
      ((file-regular-p fileName)
+      ;; Here is where the problem with the font lock is XXXX: loop over the files
+      ;; and open each of them in their own buffer. These buffers are where the work
+      ;; will take place for each file.
       (with-current-buffer (find-file-noselect fileName)
-	(goto-char (point-min))
 	;; Ensure that font-lock scans the whole file.
 	(font-lock-fontify-buffer)
+	(goto-char (point-min))
 	;; Find each occurrence of the annotations in list of valid
 	;; annotations.
 	(dolist (annot rtnav-valid-annotations)
@@ -221,12 +223,8 @@ are inside comments and parses those into the returned structure."
 	  (setq case-fold-search nil) ;; Set case sensitive searching off.
 	  (while (search-forward-regexp annot nil t 1)
 	    ;; Check the text properties for a comment.
-	    (setq tPropList (text-properties-at (point)))
-	    (dolist (textProp tPropList)
-	      (if (eq textProp (or font-lock-comment-face font-lock-comment-delimiter-face))
-		  (setq inComment 1)))
+	    (setq inComment (nth 4 (syntax-ppss)))
 	    ;; If the char at point is inside a comment...
-	    ;; FIXME: this code does not get invoked as it should in all cases.
 	    (if inComment
 		(progn (setq lineNo '())
 		       (setq annotText '())
@@ -241,10 +239,9 @@ are inside comments and parses those into the returned structure."
 		       (setq masterAnnotList (cons listEntry masterAnnotList))
 		       (goto-char (match-end 0))
 		       ;; reset the comment flag.
-		       (setq inComment nil))))
-	  (goto-char (point-min)))))
+		       (setq inComment nil)))))))
      (t
-      (error "Invalid file name passed!")))
+      (error "Invalid file name!")))
     ;; Delete the buffer as cleanup.
     (kill-buffer fileName)
     ;; Return the list of annotations for the passed file.  FIXME: get the list
