@@ -120,7 +120,9 @@ Set up the task list buffer for display to the user."
 	  (insert itemElement)
 	  (insert "  "))
 	(newline)))
-    (rtnav-uniquify-all-lines-buffer)))
+    (rtnav-uniquify-all-lines-buffer)
+    (rtnav-kill-blank-lines)
+    (rtnav-sort-lines)))
 
 
 (defun rtnav-uniquify-all-lines-region (start end)
@@ -144,15 +146,16 @@ Set up the task list buffer for display to the user."
 (defun rtnav-kill-blank-lines ()
   "Remove blank lines from the task list buffer."
   (interactive)
+  (goto-char (point-min))
+  (delete-blank-lines))
 
-  )
 
 
-(defun rtnav-sort-lines-in-buffer ()
+(defun rtnav-sort-lines ()
   "Sort the lines in the buffer based on the file and line number."
   (interactive)
-
-  )
+  (goto-char (point-min))
+  (sort-numeric-fields 3 (point-min) (point-max)))
 
 
 (defun rtnav-goto-list-item ()
