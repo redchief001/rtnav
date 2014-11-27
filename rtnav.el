@@ -150,12 +150,23 @@ Set up the task list buffer for display to the user."
   (delete-blank-lines))
 
 
-
-(defun rtnav-sort-lines ()
+(defun rtnav-sort-buffer ()
   "Sort the lines in the buffer based on the file and line number."
   (interactive)
-  (goto-char (point-min))
-  (sort-numeric-fields 3 (point-min) (point-max)))
+  (let ((continuation t)
+	fileName
+	p1
+	p2
+	lineCount)
+    (goto-char (point-min))
+    ;; Get the number of lines in the buffer
+    (setq lineCount (count-lines (point-min) (point-max)))
+    (while lineCount
+      ;; Grab the file name (should be at the beginning of the line)
+      (setq fileName (thing-at-point 'word))
+      ;; Loop through the lines until the file name doesn't match
+      (while )
+      )))
 
 
 (defun rtnav-goto-list-item ()
@@ -212,11 +223,19 @@ text in a 'paragraph' or block of text for different screen sizes."
 		 (list fileName (string-to-number lineNo)) fileAndLine)))))))
 
 
+(defun rtnav-open-all-task-items ()
+  "Open all of the task list items in their own buffers with point at the first annotation."
+  (interactive)
+  ;; TODO: implement this function.
+  )
+
+
 (defun rtnav-save-task-list ()
   "Save the current task list to a file."
   (interactive)
-  ;; TODO: implement this...
-  )
+  ;; Associate the buffer with a file.
+  (with-current-buffer "Todo.list"
+    (write-file (format "%s/Todo.list" default-directory))))
 
 
 (defun rtnav-gen-list-buffer ()
