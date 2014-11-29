@@ -150,7 +150,7 @@ Set up the task list buffer for display to the user."
   (delete-blank-lines))
 
 
-(defun rtnav-sort-buffer ()
+(defun rtnav-sort-buffer () ;; TODO: finish this function
   "Sort the lines in the buffer based on the file and line number."
   (interactive)
   (let ((continuation t)
