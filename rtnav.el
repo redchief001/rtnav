@@ -122,7 +122,7 @@ Set up the task list buffer for display to the user."
 	(newline)))
     (rtnav-uniquify-all-lines-buffer)
     (rtnav-kill-blank-lines)
-    (rtnav-sort-lines)))
+    (rtnav-sort-buffer)))
 
 
 (defun rtnav-uniquify-all-lines-region (start end)
@@ -153,19 +153,15 @@ Set up the task list buffer for display to the user."
 (defun rtnav-sort-buffer () ;; TODO: finish this function
   "Sort the lines in the buffer based on the file and line number."
   (interactive)
-  (let ((continuation t)
-	fileName
+  (let (fileName
 	p1
 	p2
-	lineCount)
+	lineCount
+	linesProcessed)
     (goto-char (point-min))
     ;; Get the number of lines in the buffer
     (setq lineCount (count-lines (point-min) (point-max)))
     (while lineCount
-      ;; Grab the file name (should be at the beginning of the line)
-      (setq fileName (thing-at-point 'word))
-      ;; Loop through the lines until the file name doesn't match
-      (while )
       )))
 
 
