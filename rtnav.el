@@ -45,7 +45,10 @@
 ;; Extend rtnav with other types of annotations by adding to this list.
 ;;;###autoload
 (defvar rtnav-valid-annotations (list "\\bTODO\\b" "\\bFIXME\\b" "\\bXXXX\\b" "\\bNOTE\\b")
-  "The valid annotations that are parsed by rtnav.  Add to this list to extend."
+  "The valid annotations that are parsed by rtnav.  Add to this list to extend.
+TODO: actually, it should be up to the user if they want to put a colon or dash
+after the annotation as I did above.  The regular expressions should allow for
+those types of variations."
   )
 
 
